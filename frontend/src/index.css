@@ -1,4 +1,6 @@
 :root {
+  --header-background: #d4d4d4;
+  --footer-background: #d4d4d4;
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -49,13 +51,22 @@
     filter: invert(1) brightness(2);
   }
 }
-
+/*
 #root {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
   border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}*/
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -95,17 +106,4 @@ p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
