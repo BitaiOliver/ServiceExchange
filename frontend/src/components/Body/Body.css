@@ -2,6 +2,22 @@
   width: 100%;
   background-color: #ebebeb;
   color: #333333;
+  min-height: 80svh;
+  margin: 0;
+}
+
+.body_container {
+  justify-content: space-between;
+  align-items: left;
+  max-width: 1800px;
+  width: 100%;
+  font-size: 24px;
+}
+/*
+.body {
+  width: 100%;
+  background-color: #ebebeb;
+  color: #333333;
   padding: 16px 0;
   box-sizing: border-box;
   min-height: 80svh;
@@ -17,4 +33,5 @@
   padding: 0 32px;
   font-size: 24px;
   box-sizing: border-box;
-}
+}*/
+

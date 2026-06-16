@@ -6,7 +6,7 @@ export function Body() {
   return (
     <div className='body'>
       <div className='body_container'>
-        <TestPage />
+        some text het
       </div>
     </div>
   );

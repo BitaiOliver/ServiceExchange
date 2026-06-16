@@ -1,16 +1,22 @@
 import pool from "./database.js";
-
-//const express = require ("express");
 import express from "express";
+import cors from "cors";
+import loginRouter from "./login.js";
+import registerRouter from "./register.js";
+import articleRouter from "./articles.js";
+
 const app = express();
 
-//const cors = require("cors"); 
-import cors from "cors";
 const corsOptions = {
     origin: ["http://localhost:5173"]
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
+
+app.use('/api', loginRouter);
+app.use('/api', registerRouter);
+app.use('/api', articleRouter);
 
 
 app.get("/api", async (req, res) => {
