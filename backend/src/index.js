@@ -4,6 +4,7 @@ import cors from "cors";
 import loginRouter from "./login.js";
 import registerRouter from "./register.js";
 import articleRouter from "./articles.js";
+import userAPIsRouter from "./userAPIs.js";
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use('/api', loginRouter);
 app.use('/api', registerRouter);
 app.use('/api', articleRouter);
-
+app.use('/api', userAPIsRouter);
 
 app.get("/api", async (req, res) => {
     res.json({fruits: ["apple", "banana"]});

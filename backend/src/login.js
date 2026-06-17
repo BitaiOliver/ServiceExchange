@@ -14,14 +14,14 @@ router.post('/login', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     if (!rows || rows.length === 0) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Utilizatorul nu există' });
     }
 
     const user = rows[0];
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Parolă incorectă' });
     }
 
     return res.json({ success: true, userId: user.id, email: user.email });
