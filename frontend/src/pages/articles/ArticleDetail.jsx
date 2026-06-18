@@ -20,6 +20,8 @@ import {
   Loader2,
 } from "lucide-react";
 import moment from "moment";
+import axios from 'axios';
+
 
 export default function ArticleDetail() {
   const { id } = useParams();
@@ -40,9 +42,17 @@ export default function ArticleDetail() {
 
   const loadArticle = async () => {
     setLoading(true);
-    /*const data = await base44.entities.Article.filter({ id }); obi12: replace with get api when available*/
-    const data = [];
-    setArticle(data.length > 0 ? data[0] : null);
+    console.log("Loading article with id:", id);
+    try {
+      const response = await axios.get(`http://localhost:8080/api/article/${id}`);
+      //setArticle(response.data.articles);
+      console.log(response.data.article);
+      setArticle(response.data.article);
+    } catch (error) {
+      console.error('Error fetching article with id ${id}:', error);
+    } finally {
+      setLoading(false);
+    }
     setLoading(false);
   };
 
@@ -147,15 +157,15 @@ export default function ArticleDetail() {
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              Publicat: {moment(article.created_date).format("DD.MM.YYYY")}
+              Publicat: {moment(article.creation_date).format("DD.MM.YYYY")}
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              Expiră: {moment(article.expiration_date).format("DD.MM.YYYY")}
+              Expiră: {moment(article.creation_date).format("DD.MM.YYYY")}
             </span>
             <span className="flex items-center gap-1.5">
               <User className="w-4 h-4" />
-              {article.author_name || "Anonim"}
+              {article.author_id || "Anonim"}
             </span>
           </div>
 

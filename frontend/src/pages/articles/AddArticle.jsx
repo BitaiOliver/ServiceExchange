@@ -9,6 +9,8 @@ import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, PlusCircle, Loader2, Upload, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
+
 
 export default function AddArticle() {
   const { user } = useAuth();
@@ -77,9 +79,22 @@ export default function AddArticle() {
         contact_email: form.contact_email.trim(),
         expiration_date: expirationDate.toISOString().split("T")[0],
         status: "active",
+      }); obi12: replace with post api when available */
+      const response = await axios.post('http://localhost:8080/api/article', {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        price: form.price ? parseFloat(form.price) : null,
+        picture: null, // picture upload not implemented yet
+        author_id: user?.id,
+        contact_name: form.contact_name.trim(),
+        contact_surname: form.contact_surname.trim(),
+        contact_phone: form.contact_phone.trim(),
+        contact_email: form.contact_email.trim(),
+        status: "active",
       });
 
-      navigate("/articolele-mele"); obi12: replace with post api when available */
+
+      navigate("/articolele-mele"); 
     } catch (err) {
       setError(err.message || "A apărut o eroare la publicarea articolului.");
     } finally {

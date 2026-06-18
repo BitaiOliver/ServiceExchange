@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-//import { base44 } from "@/api/base44Client";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "../../components/AuthLayout";
+import axios from 'axios';
+
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("token");
-  console.log('Reset token from URL:', resetToken); // Log the reset token for debugging
+  //console.log('Reset token from URL:', resetToken); // Log the reset token for debugging
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,10 +27,13 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      /*await base44.auth.resetPassword({ resetToken, newPassword }); obi12: replace with reset password api when available*/
+      const response = await axios.post('http://localhost:8080/api/reset-password', {
+        token: resetToken,
+        newPassword: newPassword
+      });
       window.location.href = "/login";
-    } catch (err) {
-      setError(err.message || "Resetarea parolei a eșuat");
+    } catch (error) {
+      setError("Resetarea parolei a eșuat: " + error.response?.data?.error || "Resetarea parolei a eșuat");
     } finally {
       setLoading(false);
     }

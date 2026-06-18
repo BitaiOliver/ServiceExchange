@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-//import { base44 } from "@/api/base44Client";
 import ArticleCard from "../../components/ArticleCard";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Search, SlidersHorizontal, HardHat } from "lucide-react";
+import axios from 'axios';
+
 
 export default function Home() {
   const [articles, setArticles] = useState([]);
@@ -17,10 +18,15 @@ export default function Home() {
 
   const loadArticles = async () => {
     setLoading(true);
-    /*const data = await base44.entities.Article.list("-created_date", 100); obi12: replace with get api when available*/ 
-    const data = []; // obi12: dummy data for now
-    setArticles(data);
-    setLoading(false);
+    try {
+      const response = await axios.get('http://localhost:8080/api/articles');
+      setArticles(response.data.articles);
+      //console.log(response.data.articles);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filtered = articles.filter((a) => {
@@ -28,7 +34,7 @@ export default function Home() {
       !search ||
       a.title?.toLowerCase().includes(search.toLowerCase()) ||
       a.description?.toLowerCase().includes(search.toLowerCase()) ||
-      a.author_name?.toLowerCase().includes(search.toLowerCase());
+      a.author_id?.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" || a.status === statusFilter;

@@ -1,43 +1,89 @@
 import express from 'express';
+import pool from "./database.js";
+
 
 const router = express.Router();
 
-let nextArticleId = 1;
-const articles = [];
 
 function validateArticlePayload(payload) {
   const {
     title,
     description,
-    category,
     price,
-    address,
-    contact,
-    authorId,
+    picture_url,
+    author_id,
+    contact_name,
+    contact_surname,
+    contact_phone,
+    contact_email,
+    creation_date,
+    status
   } = payload;
 
-  if (!authorId) return 'Author ID is required';
-  if (!title || !description || !category || price == null) return 'Title, description, category, and price are required';
-  if (!address || !address.country || !address.state || !address.city || !address.street || !address.number) {
-    return 'Address fields are required';
+  if (!author_id) return 'Author ID is required';
+  if (!title || !description  == null) return 'Titlu si descriere sunt necesare';
+  if (!contact_name || !contact_surname || !contact_phone || !contact_email) {
+    return 'Informatiile despre persoana de contact sunt necesare';
   }
-  if (!contact || !contact.name || !contact.telephone || !contact.email) {
-    return 'Contact person information is required';
-  }
-
   return null;
 }
 
-router.get('/articles', (req, res) => {
-  const { authorId } = req.query;
-  if (authorId) {
-    const filtered = articles.filter((item) => item.authorId === Number(authorId));
-    return res.json({ success: true, articles: filtered });
+router.get('/articles', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM articles WHERE status = ?', ['active']);
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ error: 'Nu există articole' });
+    }
+    return res.json({ success: true, articles: rows });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
   }
-
-  res.json({ success: true, articles });
 });
 
+router.get('/article/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    const [rows] = await pool.query('SELECT * FROM articles WHERE id = ?', [id]);
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ error: 'Articolul nu există' });
+    }
+    return res.json({ success: true, article: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
+  }
+});
+
+router.post('/article', async (req, res) => {
+  const {
+    title,
+    description,
+    price,
+    picture_url,
+    author_id,
+    contact_name,
+    contact_surname,
+    contact_phone,
+    contact_email,
+    status
+  } = req.body;
+  const error = validateArticlePayload(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
+  try {
+    const [rows] = await pool.query('INSERT INTO articles ( title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status) VALUES (?,?,?,?,?,?,?,?,?,?)',
+      [title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status]);
+    return res.status(201).json({ success: true, article: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
+  }
+});
+
+/*
 router.get('/articles/:id', (req, res) => {
   const id = Number(req.params.id);
   const article = articles.find((item) => item.id === id);
@@ -116,6 +162,6 @@ router.put('/articles/:id', (req, res) => {
   article.updatedAt = new Date().toISOString();
 
   res.json({ success: true, article });
-});
+});*/
 
 export default router;

@@ -18,12 +18,11 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      //await base44.auth.resetPasswordRequest(email); obi12: replace with reset password request api when available
       const response = await axios.post('http://localhost:8080/api/forgot-password', {
         email: email
       });
 
-      console.log('Password reset request sent for email:', email); // Log the email for debugging
+      //console.log('Password reset request sent for email:', email); // Log the email for debugging
     } catch (err) {
       console.error('Error occurred while sending password reset request:', err);
     } finally {

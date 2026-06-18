@@ -5,6 +5,8 @@ import loginRouter from "./login.js";
 import registerRouter from "./register.js";
 import articleRouter from "./articles.js";
 import userAPIsRouter from "./userAPIs.js";
+import 'dotenv/config'
+
 
 const app = express();
 
