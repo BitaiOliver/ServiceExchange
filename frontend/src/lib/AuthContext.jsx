@@ -138,7 +138,6 @@ export const AuthProvider = ({ children }) => {
   const login = (newUser) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
-
       setUser(newUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);

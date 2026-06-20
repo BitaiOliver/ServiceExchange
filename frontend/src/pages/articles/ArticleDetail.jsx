@@ -32,7 +32,7 @@ export default function ArticleDetail() {
   const [deleting, setDeleting] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const isOwner = article && user && article.created_by_id === user.id;
+  const isOwner = article && user && article.author_id === user.id;
   const canEdit = isOwner || isAdmin;
   const canDelete = isOwner || isAdmin;
 
@@ -42,11 +42,11 @@ export default function ArticleDetail() {
 
   const loadArticle = async () => {
     setLoading(true);
-    console.log("Loading article with id:", id);
+    //console.log("Loading article with id:", id);
     try {
-      const response = await axios.get(`http://localhost:8080/api/article/${id}`);
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/article/${id}`);
       //setArticle(response.data.articles);
-      console.log(response.data.article);
+      //console.log(response.data.article);
       setArticle(response.data.article);
     } catch (error) {
       console.error('Error fetching article with id ${id}:', error);
@@ -59,12 +59,15 @@ export default function ArticleDetail() {
   const handleDelete = async () => {
     if (!window.confirm("Ești sigur că vrei să ștergi acest articol?")) return;
     setDeleting(true);
-    /*await base44.entities.Article.delete(article.id); obi12: replace with delete api when available*/
+    const response = await axios.delete(import.meta.env.VITE_BACKEND_URL + `/api/article/${article.id}`);
     navigate("/");
   };
 
   const handleStatusChange = async (newStatus) => {
-    /*await base44.entities.Article.update(article.id, { status: newStatus }); obi12: replace with patch api when available*/
+    const response = await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/articleStatus' ,{
+      article_id: article.id,
+      status: newStatus
+    });
     loadArticle();
   };
 
@@ -113,10 +116,10 @@ export default function ArticleDetail() {
       </Link>
 
       <Card className="overflow-hidden border-border">
-        {article.picture && (
+        {article.picture_url && (
           <div className="aspect-[21/9] overflow-hidden bg-secondary">
             <img
-              src={article.picture}
+              src={import.meta.env.VITE_BACKEND_URL + article.picture_url}
               alt={article.title}
               className="w-full h-full object-cover"
             />

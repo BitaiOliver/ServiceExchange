@@ -6,6 +6,7 @@ import registerRouter from "./register.js";
 import articleRouter from "./articles.js";
 import userAPIsRouter from "./userAPIs.js";
 import 'dotenv/config'
+import rateLimit from 'express-rate-limit'
 
 
 const app = express();
@@ -14,8 +15,17 @@ const corsOptions = {
     origin: ["http://localhost:5173"]
 };
 
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200, // generous for normal use
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use(globalLimiter)     
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api', loginRouter);
 app.use('/api', registerRouter);

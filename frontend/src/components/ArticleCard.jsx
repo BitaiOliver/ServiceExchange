@@ -24,10 +24,10 @@ export default function ArticleCard({ article }) {
   return (
     <Link to={`/articol/${article.id}`}>
       <Card className="group h-full overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer">
-        {article.picture ? (
+        {article.picture_url ? (
           <div className="aspect-[16/10] overflow-hidden bg-secondary">
             <img
-              src={article.picture}
+              src={import.meta.env.VITE_BACKEND_URL + article.picture_url}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />

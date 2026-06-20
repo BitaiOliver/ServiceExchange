@@ -34,7 +34,7 @@ export default function MyProfile() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const me = await axios.get('http://localhost:8080/api/userInfo', {
+      const me = await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/userInfo', {
         params: {
           userID: user?.id
         }
@@ -70,7 +70,7 @@ export default function MyProfile() {
     setSaving(true);
 
     try {
-      const res = await axios.put('http://localhost:8080/api/updateUserInfo', {
+      const res = await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/updateUserInfo', {
         ...form,
         userID: user?.id
       });

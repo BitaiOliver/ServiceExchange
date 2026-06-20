@@ -17,6 +17,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import moment from "moment";
+import axios from 'axios';
+
 
 export default function MyArticles() {
   const { user } = useAuth();
@@ -33,12 +35,11 @@ export default function MyArticles() {
 
   const loadArticles = async () => {
     setLoading(true);
-    /*const data = await base44.entities.Article.list("-created_date", 200); obi12: replace with get api when available*/
-    const data = [];
+    const response = await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/articles');
     if (isAdmin) {
-      setArticles(data);
+      setArticles(response.data.articles);
     } else if (user) {
-      setArticles(data.filter((a) => a.created_by_id === user.id));
+      setArticles(response.data.articles.filter((a) => a.author_id === user.id));
     } else {
       setArticles([]);
     }
@@ -48,13 +49,16 @@ export default function MyArticles() {
   const handleDelete = async (article) => {
     if (!window.confirm("Ești sigur că vrei să ștergi acest articol?")) return;
     setDeleting(article.id);
-    /*await base44.entities.Article.delete(article.id); obi12: replace with delete api when available*/
+    const response = await axios.delete(import.meta.env.VITE_BACKEND_URL + `/api/article/${article.id}`);
     setDeleting(null);
     loadArticles();
   };
 
   const handleStatusChange = async (articleId, newStatus) => {
-    /*await base44.entities.Article.update(articleId, { status: newStatus }); obi12: replace with patch api when available*/
+    const response = await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/articleStatus' ,{
+      article_id: articleId,
+      status: newStatus
+    });
     loadArticles();
   };
 
@@ -138,10 +142,10 @@ export default function MyArticles() {
             <Card key={article.id} className="border-border hover:border-primary/20 transition-colors">
               <CardContent className="p-5">
                 <div className="flex flex-col sm:flex-row gap-4">
-                  {article.picture && (
+                  {article.picture_url && (
                     <div className="shrink-0 w-full sm:w-32 h-24 rounded-lg overflow-hidden bg-secondary">
                       <img
-                        src={article.picture}
+                        src={import.meta.env.VITE_BACKEND_URL + article.picture_url}
                         alt={article.title}
                         className="w-full h-full object-cover"
                       />

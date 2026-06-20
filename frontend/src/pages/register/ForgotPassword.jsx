@@ -18,7 +18,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8080/api/forgot-password', {
+      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/forgot-password', {
         email: email
       });
 

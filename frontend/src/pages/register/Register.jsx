@@ -33,8 +33,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      /*await base44.auth.register({ email, password }); obi12: replace with register api when available*/
-      const response = await axios.post('http://localhost:8080/api/register', {
+      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/register', {
         name: profile.name,
         surname: profile.surname,
         phone: profile.phone,

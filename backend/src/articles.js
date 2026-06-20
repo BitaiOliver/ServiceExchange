@@ -1,9 +1,23 @@
 import express from 'express';
 import pool from "./database.js";
+import multer from 'multer';
+import path from 'path';
 
 
 const router = express.Router();
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName =
+      Date.now() + '-' + Math.round(Math.random() * 1e9);
+
+    cb(null, uniqueName + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
 
 function validateArticlePayload(payload) {
   const {
@@ -30,7 +44,8 @@ function validateArticlePayload(payload) {
 
 router.get('/articles', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM articles WHERE status = ?', ['active']);
+    //const [rows] = await pool.query('SELECT * FROM articles WHERE status = ?', ['active']);
+    const [rows] = await pool.query('SELECT * FROM articles');
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Nu există articole' });
     }
@@ -77,6 +92,87 @@ router.post('/article', async (req, res) => {
     const [rows] = await pool.query('INSERT INTO articles ( title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status) VALUES (?,?,?,?,?,?,?,?,?,?)',
       [title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status]);
     return res.status(201).json({ success: true, article: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
+  }
+});
+
+router.delete('/article/:id', async (req, res) => {
+  const article_id = req.params.id;
+
+  try {
+    const [result] = await pool.query('DELETE FROM articles WHERE id = ?', [article_id]);
+    //console.log('dekete api result', result );
+    return res.json({ success: true, article: result });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
+  }
+});
+
+router.post('/articlePicture', upload.single('picture'), async (req, res) => {
+  try {
+    const imagePath = `/uploads/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      imageUrl: imagePath
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+    console.error(err);
+  }
+});
+
+router.put('/article', async (req, res) => {  
+  const {
+    articleID,
+    title,
+    description,
+    price,
+    picture_url,
+    author_id,
+    contact_name,
+    contact_surname,
+    contact_phone,
+    contact_email,
+    status
+  } = req.body;
+  const error = validateArticlePayload(req.body);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
+  try {
+    const [result] = await pool.query('UPDATE articles SET title = ?, description = ?, price = ?, picture_url = ?, contact_name = ?, contact_surname = ?, contact_phone = ?, contact_email = ?, status = ? WHERE id = ?', 
+      [title,
+      description,
+      price,
+      picture_url,
+      contact_name,
+      contact_surname,
+      contact_phone,
+      contact_email,
+      status,
+      articleID
+    ]);
+    return res.status(201).json({ success: true, article: result });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Articles Database error' });
+  }
+});
+
+router.put('/articleStatus', async (req, res) => {  
+  const {article_id, status} = req.body;
+
+  try {
+    const [result] = await pool.query('UPDATE articles SET status = ? WHERE id = ?', 
+      [status,
+      article_id
+    ]);
+    return res.status(201).json({ success: true, article: result });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Articles Database error' });

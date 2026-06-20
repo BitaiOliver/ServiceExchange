@@ -19,8 +19,9 @@ export default function Home() {
   const loadArticles = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8080/api/articles');
-      setArticles(response.data.articles);
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/articles');
+      //setArticles(response.data.articles);
+      setArticles(response.data.articles.filter((a) => a.status === 'active' || a.status === 'ongoing'));
       //console.log(response.data.articles);
     } catch (error) {
       console.error('Error fetching articles:', error);

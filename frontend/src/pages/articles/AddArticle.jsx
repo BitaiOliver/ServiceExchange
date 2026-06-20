@@ -80,7 +80,26 @@ export default function AddArticle() {
         expiration_date: expirationDate.toISOString().split("T")[0],
         status: "active",
       }); obi12: replace with post api when available */
-      const response = await axios.post('http://localhost:8080/api/article', {
+      const formData = new FormData();
+      formData.append('picture', picture);
+      const picresponse = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/articlePicture', formData);
+      const picUrl = picresponse.data.imageUrl;
+      //console.log("Picture uploaded, URL:", picUrl);
+
+      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/article', {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        price: form.price ? parseFloat(form.price) : null,
+        picture_url: picUrl,
+        author_id: user?.id,
+        contact_name: form.contact_name.trim(),
+        contact_surname: form.contact_surname.trim(),
+        contact_phone: form.contact_phone.trim(),
+        contact_email: form.contact_email.trim(),
+        status: "active",
+      });
+
+      /*const response = await axios.post('http://localhost:8080/api/article', {
         title: form.title.trim(),
         description: form.description.trim(),
         price: form.price ? parseFloat(form.price) : null,
@@ -91,7 +110,7 @@ export default function AddArticle() {
         contact_phone: form.contact_phone.trim(),
         contact_email: form.contact_email.trim(),
         status: "active",
-      });
+      });*/
 
 
       navigate("/articolele-mele"); 

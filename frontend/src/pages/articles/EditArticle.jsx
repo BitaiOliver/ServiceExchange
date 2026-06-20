@@ -8,6 +8,8 @@ import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, Save, Loader2, Upload, X, HardHat } from "lucide-react";
+import axios from 'axios';
+
 
 export default function EditArticle() {
   const { id } = useParams();
@@ -24,6 +26,7 @@ export default function EditArticle() {
     contact_email: "",
     status: "active",
   });
+  const [articleID, setArticleID] = useState(null);
   const [picture, setPicture] = useState(null);
   const [picturePreview, setPicturePreview] = useState(null);
   const [existingPicture, setExistingPicture] = useState(null);
@@ -40,15 +43,18 @@ export default function EditArticle() {
 
   const loadArticle = async () => {
     setLoading(true);
-    /*const data = await base44.entities.Article.filter({ id }); // obi12: replace with get when available*/
-    const data = ''; 
-    const article = data.length > 0 ? data[0] : null;
+    const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/article/${id}`);
+    console.log('din edit articol', response.data.article);
+    const article = response.data.article;
     if (!article) {
       setNotFound(true);
       setLoading(false);
       return;
     }
-    if (article.created_by_id !== user?.id && !isAdmin) {
+    else{
+      setArticleID(article.id);
+    }
+    if (article.author_id !== user?.id && !isAdmin) {
       navigate("/articolele-mele");
       return;
     }
@@ -63,7 +69,7 @@ export default function EditArticle() {
       contact_email: article.contact_email || "",
       status: article.status || "active",
     });
-    setExistingPicture(article.picture || null);
+    setExistingPicture(import.meta.env.VITE_BACKEND_URL + article.picture_url || null);
     setLoading(false);
   };
 
@@ -101,25 +107,31 @@ export default function EditArticle() {
     setSaving(true);
 
     try {
-      /*let pictureUrl = existingPicture;
+      let picUrl = existingPicture.replace(import.meta.env.VITE_BACKEND_URL, "");
       if (picture) {
-        const uploadResult = await base44.integrations.Core.UploadFile({ file: picture });
-        pictureUrl = uploadResult.file_url;
+        const formData = new FormData();
+        formData.append('picture', picture);
+        const picresponse = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/articlePicture', formData);
+        picUrl = picresponse.data.imageUrl;
       } else if (picture === null && existingPicture === null) {
         pictureUrl = null;
       }
 
-      await base44.entities.Article.update(id, {
+      const response = await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/article', {
+        articleID,
         title: form.title.trim(),
         description: form.description.trim(),
         price: form.price ? parseFloat(form.price) : null,
-        picture: pictureUrl,
+        picture_url: picUrl,
+        author_id: user?.id,
         contact_name: form.contact_name.trim(),
         contact_surname: form.contact_surname.trim(),
         contact_phone: form.contact_phone.trim(),
         contact_email: form.contact_email.trim(),
-        status: form.status,
-      });  obi12: add post api*/
+        status: form.status.trim(),
+      });
+      //console.log('Din edit article...response', response);
+
 
       navigate(`/articol/${id}`);
     } catch (err) {
