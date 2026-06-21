@@ -2,6 +2,7 @@ import express from 'express';
 import pool from "./database.js";
 import multer from 'multer';
 import path from 'path';
+import { authenticateToken } from './authMiddleware.js';
 
 
 const router = express.Router();
@@ -44,8 +45,14 @@ function validateArticlePayload(payload) {
 
 router.get('/articles', async (req, res) => {
   try {
-    //const [rows] = await pool.query('SELECT * FROM articles WHERE status = ?', ['active']);
-    const [rows] = await pool.query('SELECT * FROM articles');
+    const [rows] = await pool.query(`
+      SELECT
+        a.*,
+        u.name AS author_name,
+        u.surname AS author_surname
+      FROM articles a
+      LEFT JOIN users u ON a.author_id = u.id
+    `);
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Nu există articole' });
     }
@@ -59,7 +66,15 @@ router.get('/articles', async (req, res) => {
 router.get('/article/:id', async (req, res) => {
   const id = Number(req.params.id);
   try {
-    const [rows] = await pool.query('SELECT * FROM articles WHERE id = ?', [id]);
+    const [rows] = await pool.query(`
+      SELECT
+        a.*,
+        u.name AS author_name,
+        u.surname AS author_surname
+      FROM articles a
+      LEFT JOIN users u ON a.author_id = u.id
+      WHERE a.id = ?
+    `, [id]);
     if (!rows || rows.length === 0) {
       return res.status(401).json({ error: 'Articolul nu există' });
     }
@@ -70,40 +85,77 @@ router.get('/article/:id', async (req, res) => {
   }
 });
 
-router.post('/article', async (req, res) => {
+router.post('/article', authenticateToken, async (req, res) => {
   const {
     title,
     description,
     price,
     picture_url,
-    author_id,
     contact_name,
     contact_surname,
     contact_phone,
     contact_email,
     status
   } = req.body;
-  const error = validateArticlePayload(req.body);
+
+  const authenticatedUserId = req.user?.id;
+  if (!authenticatedUserId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const error = validateArticlePayload({
+    ...req.body,
+    author_id: authenticatedUserId,
+  });
   if (error) {
     return res.status(400).json({ error });
   }
 
   try {
-    const [rows] = await pool.query('INSERT INTO articles ( title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status) VALUES (?,?,?,?,?,?,?,?,?,?)',
-      [title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status]);
-    return res.status(201).json({ success: true, article: rows[0] });
+    const [result] = await pool.query(
+      'INSERT INTO articles (title, description, price, picture_url, author_id, contact_name, contact_surname, contact_phone, contact_email, status) VALUES (?,?,?,?,?,?,?,?,?,?)',
+      [
+        title,
+        description,
+        price,
+        picture_url,
+        authenticatedUserId,
+        contact_name,
+        contact_surname,
+        contact_phone,
+        contact_email,
+        status
+      ]
+    );
+
+    return res.status(201).json({ success: true, article: { id: result.insertId } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Articles Database error' });
   }
 });
 
-router.delete('/article/:id', async (req, res) => {
-  const article_id = req.params.id;
+router.delete('/article/:id', authenticateToken, async (req, res) => {
+  const article_id = Number(req.params.id);
+  const authenticatedUserId = req.user?.id;
+  const isAdmin = req.user?.role === 'admin';
+
+  if (!article_id) {
+    return res.status(400).json({ error: 'Article id is required' });
+  }
 
   try {
+    const [articleRows] = await pool.query('SELECT author_id FROM articles WHERE id = ?', [article_id]);
+    if (!articleRows.length) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const article = articleRows[0];
+    if (!isAdmin && Number(article.author_id) !== Number(authenticatedUserId)) {
+      return res.status(403).json({ error: 'You do not have permission to delete this article' });
+    }
+
     const [result] = await pool.query('DELETE FROM articles WHERE id = ?', [article_id]);
-    //console.log('dekete api result', result );
     return res.json({ success: true, article: result });
   } catch (err) {
     console.error(err);
@@ -125,26 +177,45 @@ router.post('/articlePicture', upload.single('picture'), async (req, res) => {
   }
 });
 
-router.put('/article', async (req, res) => {  
+router.put('/article', authenticateToken, async (req, res) => {  
   const {
     articleID,
     title,
     description,
     price,
     picture_url,
-    author_id,
     contact_name,
     contact_surname,
     contact_phone,
     contact_email,
     status
   } = req.body;
-  const error = validateArticlePayload(req.body);
-  if (error) {
-    return res.status(400).json({ error });
+  const authenticatedUserId = req.user?.id;
+  const isAdmin = req.user?.role === 'admin';
+
+  if (!authenticatedUserId) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   try {
+    const [articleRows] = await pool.query('SELECT author_id FROM articles WHERE id = ?', [articleID]);
+    if (!articleRows.length) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const article = articleRows[0];
+    if (!isAdmin && Number(article.author_id) !== Number(authenticatedUserId)) {
+      return res.status(403).json({ error: 'You do not have permission to edit this article' });
+    }
+
+    const error = validateArticlePayload({
+      ...req.body,
+      author_id: article.author_id,
+    });
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
     const [result] = await pool.query('UPDATE articles SET title = ?, description = ?, price = ?, picture_url = ?, contact_name = ?, contact_surname = ?, contact_phone = ?, contact_email = ?, status = ? WHERE id = ?', 
       [title,
       description,

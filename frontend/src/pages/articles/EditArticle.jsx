@@ -117,13 +117,12 @@ export default function EditArticle() {
         pictureUrl = null;
       }
 
-      const response = await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/article', {
+      await axios.put(import.meta.env.VITE_BACKEND_URL + '/api/article', {
         articleID,
         title: form.title.trim(),
         description: form.description.trim(),
         price: form.price ? parseFloat(form.price) : null,
         picture_url: picUrl,
-        author_id: user?.id,
         contact_name: form.contact_name.trim(),
         contact_surname: form.contact_surname.trim(),
         contact_phone: form.contact_phone.trim(),

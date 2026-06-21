@@ -2,6 +2,7 @@ import express from "express";
 import pool from "./database.js";
 import bcrypt from "bcryptjs";
 import rateLimit from 'express-rate-limit'
+import { generateToken } from './authMiddleware.js';
 
 
 const router = express.Router();
@@ -36,7 +37,21 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Parolă incorectă' });
     }
 
-    return res.json({ success: true, userId: user.id, email: user.email });
+    const token = generateToken(user);
+
+    return res.json({
+      success: true,
+      userId: user.id,
+      email: user.email,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        surname: user.surname,
+        role: user.role || null,
+      }
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Database error' });

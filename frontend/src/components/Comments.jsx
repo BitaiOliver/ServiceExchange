@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-//import { base44 } from "@/api/base44Client";
+import axios from "axios";
 import { useAuth } from "../lib/AuthContext";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -21,51 +21,58 @@ export default function Comments({ articleId }) {
 
   const loadComments = async () => {
     setLoading(true);
-    /*const data = await base44.entities.Comment.filter({ article_id: articleId }, "-created_date"); obi12: replace later with api call*/
-     const data = [
-      {
-        id: 1,
-        article_id: articleId,
-        author_name: "Ion Popescu",
-        text: "Acesta este un comentariu de test.",
-        created_date: "2024-06-01T12:34:56Z",
-        created_by_id: 2,
-      },
-      {
-        id: 2,
-        article_id: articleId,
-        author_name: "Maria Ionescu",
-        text: "Alt comentariu pentru testare.",
-        created_date: "2024-06-02T08:20:00Z",
-        created_by_id: 3,
-      },
-    ]; /* obi12: const from above is just dummy data */
-    setComments(data);
-    setLoading(false);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/comments?article_id=${articleId}`
+      );
+      setComments(response.data.comments || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      setComments([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || !user?.id) return;
+
     setSubmitting(true);
-    /*await base44.entities.Comment.create({
-      article_id: articleId,
-      author_name: user?.name && user?.surname ? `${user.name} ${user.surname}` : (user?.full_name || "Utilizator"),
-      text: text.trim(),
-    }); obi12: replace later with api call*/
-    setText("");
-    setSubmitting(false);
-    loadComments();
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/comments`,
+        {
+          article_id: articleId,
+          comment_text: text.trim(),
+        }
+      );
+
+      setComments((prev) => [response.data.comment, ...prev]);
+      setText("");
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDelete = async (commentId) => {
-    /*await base44.entities.Comment.delete(commentId); obi12: replace later with api call*/
-    loadComments();
+    if (!user?.id && !isAdmin) return;
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/comments/${commentId}`
+      );
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
   };
 
   const canDelete = (comment) => {
     if (isAdmin) return true;
-    return comment.created_by_id === user?.id;
+    return Number(comment.author_id) === Number(user?.id);
   };
 
   return (
@@ -123,9 +130,11 @@ export default function Comments({ articleId }) {
                     <span className="text-sm font-semibold text-foreground">
                       {comment.author_name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {moment(comment.created_date).format("DD.MM.YYYY HH:mm")}
-                    </span>
+                    {comment.created_date && (
+                      <span className="text-xs text-muted-foreground">
+                        {moment(comment.created_date).format("DD.MM.YYYY HH:mm")}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-foreground/80">{comment.text}</p>
                 </div>

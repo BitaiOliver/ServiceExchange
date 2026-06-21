@@ -29,7 +29,14 @@ export default function Login() {
       });
 
       if (response.data?.success===true) {
-        login({ id: response.data.userId, email: response.data.email });
+        login(
+          {
+            id: response.data.userId,
+            email: response.data.email,
+            ...response.data.user,
+          },
+          response.data.token
+        );
         setEmail('');
         setPassword('');
         navigate('/profilul-meu');

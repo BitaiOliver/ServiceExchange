@@ -163,12 +163,10 @@ export default function ArticleDetail() {
               Publicat: {moment(article.creation_date).format("DD.MM.YYYY")}
             </span>
             <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              Expiră: {moment(article.creation_date).format("DD.MM.YYYY")}
-            </span>
-            <span className="flex items-center gap-1.5">
               <User className="w-4 h-4" />
-              {article.author_id || "Anonim"}
+              {article.author_name || article.author_surname
+                ? `${article.author_name || ""} ${article.author_surname || ""}`.trim()
+                : "Anonim"}
             </span>
           </div>
 

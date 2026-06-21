@@ -86,12 +86,11 @@ export default function AddArticle() {
       const picUrl = picresponse.data.imageUrl;
       //console.log("Picture uploaded, URL:", picUrl);
 
-      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/article', {
+      await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/article', {
         title: form.title.trim(),
         description: form.description.trim(),
         price: form.price ? parseFloat(form.price) : null,
         picture_url: picUrl,
-        author_id: user?.id,
         contact_name: form.contact_name.trim(),
         contact_surname: form.contact_surname.trim(),
         contact_phone: form.contact_phone.trim(),

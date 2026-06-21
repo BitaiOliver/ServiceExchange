@@ -1,12 +1,13 @@
 import pool from "./database.js";
 import express from "express";
 import cors from "cors";
+import 'dotenv/config'
+import rateLimit from 'express-rate-limit'
 import loginRouter from "./login.js";
 import registerRouter from "./register.js";
 import articleRouter from "./articles.js";
 import userAPIsRouter from "./userAPIs.js";
-import 'dotenv/config'
-import rateLimit from 'express-rate-limit'
+import commentsRouter from "./comments.js";
 
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api', loginRouter);
 app.use('/api', registerRouter);
 app.use('/api', articleRouter);
 app.use('/api', userAPIsRouter);
+app.use('/api', commentsRouter);
 
 app.get("/api", async (req, res) => {
     res.json({fruits: ["apple", "banana"]});

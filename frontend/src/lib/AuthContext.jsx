@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 //import { base44 } from '@/api/base44Client';
 import { appParams } from './app-params';
 //import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
 const STORAGE_KEY = 'user_data';
+const TOKEN_KEY = 'auth_token';
 
 
 export const AuthProvider = ({ children }) => {
@@ -18,6 +20,21 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAppState();
+  }, []);
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use((config) => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token && !config.headers?.Authorization) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+      return config;
+    });
+
+    return () => axios.interceptors.request.eject(interceptor);
   }, []);
 
   const checkAppState = async () => {
@@ -99,10 +116,10 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
 
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (stored && token) {
         try {
           const currentUser = JSON.parse(stored);
-          // console.log('User data:', currentUser);
           setIsAuthenticated(true);
           setIsLoadingAuth(false);
           setAuthChecked(true);
@@ -110,6 +127,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Parsing stored user data failed:', error);
           localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(TOKEN_KEY);
         }
       }
       else {
@@ -135,9 +153,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = (newUser) => {
+  const login = (newUser, token) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+      if (token) {
+        localStorage.setItem(TOKEN_KEY, token);
+      }
       setUser(newUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
@@ -153,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
